@@ -82,6 +82,11 @@ func (s *Server) HandleFile(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 	for _, config := range s.snapshot.configs {
 		if config.path == filename {
+			eTag := config.blob.SHA
+			if r.Header.Get("If-None-Match") == eTag {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
 			content, err := base64.StdEncoding.DecodeString(config.blob.Content)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -90,7 +95,7 @@ func (s *Server) HandleFile(w http.ResponseWriter, r *http.Request, ps httproute
 			}
 			maxAge := fmt.Sprintf("max-age=%s", s.updateDuration)
 			w.Header().Add("Cache-Control", maxAge)
-			w.Header().Add("ETag", config.blob.SHA)
+			w.Header().Add("ETag", eTag)
 			if _, err := fmt.Fprintf(w, string(content)); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Println(err)
