@@ -1,16 +1,13 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
-func newLoggingTransport(base http.RoundTripper) http.RoundTripper {
+func newModifyingTransport(base http.RoundTripper, modify func(*http.Request)) http.RoundTripper {
 	return &modifyingTransport{
-		base: base,
-		modify: func(r *http.Request) {
-			log.Printf("%s %s", r.Method, r.URL.String())
-		},
+		base:   base,
+		modify: modify,
 	}
 }
 
