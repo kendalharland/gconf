@@ -6,6 +6,7 @@ import (
 	"gconf/github"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -19,9 +20,13 @@ type Server struct {
 }
 
 func NewServer(repoOwner, repoName string, updateDuration time.Duration) *Server {
+	token := os.Getenv("TOKEN")
 	client := &http.Client{
 		Transport: newModifyingTransport(http.DefaultTransport, func(r *http.Request) {
 			log.Printf("%s %s", r.Method, r.URL.String())
+			if token != "" {
+				r.Header.Add("Authorization", fmt.Sprintf("token %s", token))
+			}
 		}),
 	}
 
